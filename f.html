@@ -22,6 +22,8 @@
       
       var debugging = false;
       
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
       var origin = new THREE.Vector3(); // 0 0 0
       
       var bounds_radius_lower    = 10;
@@ -38,16 +40,21 @@
       //
       // COLORS
       var colors = [
-        '#444545',
-        '#B5FFE9',
-        '#C5E0D8',
-        '#C9C9C9',
-        '#CEABB1'
+        '#DFF8EB',
+        '#A28F9D',
+        '#74776B',
+        '#5C574F',
+        '#48483A'
+      ];
+      colors = [
+        '#DFF8EB',
+        '#74776B',
+        '#ffffff'
       ];
       
       
       var scene = new THREE.Scene();
-      scene.background = new THREE.Color( 'white' );
+//      scene.background = new THREE.Color( 'white' );
       
       var camera = new THREE.PerspectiveCamera(
         75,
@@ -89,10 +96,29 @@
         );
         
         
+        //
+        // calculate a random depth (or elevation) for this shape
+        var depth = getRandomInt(0, 100);
+        // calculate a transparency based on that
+        var transparency = 0;
+        if (depth > 75) {
+          transparency = getRandomInt(75, 100) / 100;
+        } else if (depth > 50) {
+          transparency = getRandomInt(50, 75) / 100;
+        } else if (depth > 25) {
+          transparency = getRandomInt(25, 50) / 100;
+        } else {
+          transparency = getRandomInt(0, 25) / 100;
+        }
+        if (debugging) {
+          console.log("DEPTH (z) " + depth.toString());
+          console.log("TRANSPARENCY " + transparency.toString());
+        }
+        
         var material = new THREE.LineBasicMaterial( { 
           color: random_color,
           transparent: true,
-          opacity: Math.random()
+          opacity: transparency
         } );
         var geometry = new THREE.RingGeometry( 
           random_radius, 
@@ -100,7 +126,10 @@
           (random_radius / 32) * 32
         );
         
-        scene.add( new THREE.Mesh( geometry, material ) );
+        var shape = new THREE.Mesh( geometry, material );
+        shape.position.z = depth;
+        
+        scene.add( shape );
         
       
       }      
