@@ -70,11 +70,17 @@
       m_on = new THREE.LineBasicMaterial( { color: random_color } );
       
       var g0 = ca_init();
+      var shade_color;
       
       for (var g = 0; g < ca_generation_size; g++) {
+        
+        shade_color = shadeColor2(random_color, g / ca_generation_size);
+        m_on = new THREE.LineBasicMaterial( { color: shade_color } );
+        
         var g1 = ca_next_generation(g0, gnext_rule110);
         ca_draw_generation(g1);
         g0 = g1;
+        
       }
       
       
