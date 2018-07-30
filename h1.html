@@ -72,7 +72,7 @@
       var g0 = ca_init();
       
       for (var g = 0; g < ca_generation_size; g++) {
-        var g1 = ca_next_generation(g0, gnext);
+        var g1 = ca_next_generation(g0, gnext_rule110);
         ca_draw_generation(g1);
         g0 = g1;
       }
@@ -173,6 +173,50 @@
         }
         
       }
+      
+      function gnext_rule30(l, c, r) {
+        
+        if (l && c && r) {
+          return 0;
+        } else if (l && c && !r) {
+          return 0;
+        } else if (l && !c && r) {
+          return 0;
+        } else if (l && !c && !r) {
+          return 1;
+        } else if (!l && c && r) {
+          return 1;
+        } else if (!l && c && !r) {
+          return 1;
+        } else if (!l && !c && r) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      }
+
+      function gnext_rule110(l, c, r) {
+        
+        if (l && c && r) {
+          return 0;
+        } else if (l && c && !r) {
+          return 1;
+        } else if (l && !c && r) {
+          return 1;
+        } else if (l && !c && !r) {
+          return 0;
+        } else if (!l && c && r) {
+          return 1;
+        } else if (!l && c && !r) {
+          return 1;
+        } else if (!l && !c && r) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      }      
       
       function gnext_random() {
         if (Math.random() > 0.5) {
