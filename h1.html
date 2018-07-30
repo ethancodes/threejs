@@ -61,7 +61,7 @@
         which all come from the previous generation
         based on that, return 0 or 1 for the next generation of this cell
         */
-      function gnext(l, c, r, s) {
+      function gnext(l, c, r) {
         
         if (l && c && r) {
           return 0;
@@ -79,6 +79,86 @@
         
       }
 
+      function gnext2(l, c, r) {
+        
+        if (l && c && r) {
+          return 0;
+        } else if (l && c) {
+          return 1;
+        } else if (l && r) {
+          return 0;
+        } else if (c && r) {
+          return 0;
+        } else if (l || c || r) {
+          return 0;
+        } else {
+          return 1;
+        }
+        
+      }
+
+      function gnext3(l, c, r) {
+        
+        if (l && c && r) {
+          return 0;
+        } else if (l && c) {
+          return 1;
+        } else if (l && r) {
+          return 0;
+        } else if (c && r) {
+          return 0;
+        } else if (l || c || r) {
+          return 1;
+        } else {
+          return 0;
+        }
+        
+      }
+
+      function gnext4(l, c, r) {
+        
+        if (l && c && r) {
+          return 1;
+        } else if (l && c) {
+          return 0;
+        } else if (l && r) {
+          return 1;
+        } else if (c && r) {
+          return 0;
+        } else if (l || c || r) {
+          return 1;
+        } else {
+          return 1;
+        }
+        
+      }
+
+      function gnext5(l, c, r) {
+        
+        if (l && c && r) {
+          return 0;
+        } else if (l && c) {
+          return gnext_random();
+        } else if (l && r) {
+          return gnext_random();
+        } else if (c && r) {
+          return gnext_random();
+        } else if (l || c || r) {
+          return 1;
+        } else {
+          return 1;
+        }
+        
+      }
+      
+      function gnext_random() {
+        if (Math.random() > 0.5) {
+          return 1;
+        } else {
+          return 0;
+        }        
+      }
+      
       
     </script>
   </body>
