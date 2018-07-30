@@ -28,6 +28,16 @@
       
       var half_window_w = window.innerWidth / 2;
       var half_window_h = window.innerHeight / 2;
+      if (half_window_h < half_window_w) {
+        ca_generation_size = half_window_h - 100;
+      } else {
+        ca_generation_size = half_window_w - 100;
+      }
+      ca_generation_size = parseInt(ca_generation_size / 4);
+      if (debugging) {
+        console.log("GENERATION SIZE: " + ca_generation_size.toString());
+      }
+      
       var origin = new THREE.Vector3(); // 0 0 0      
       
       var scene = new THREE.Scene();
@@ -40,11 +50,24 @@
         1
       );
       camera.position.set( 0, 0, 100 );
-      camera.lookAt( new THREE.Vector3() );
+      camera.lookAt( origin );
       
       var renderer = new THREE.WebGLRenderer();
       renderer.setSize( window.innerWidth, window.innerHeight );
       document.body.appendChild( renderer.domElement );
+      
+      var colors = [
+        '#095256',
+        '#087F8C',
+        '#5AAA95',
+        '#86A873',
+        '#BB9F06'
+      ];
+      var random_color = colors[getRandomInt(0, colors.length)];
+      if (debugging) {
+        console.log(random_color);
+      }
+      m_on = new THREE.LineBasicMaterial( { color: random_color } );
       
       var g0 = ca_init();
       

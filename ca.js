@@ -6,9 +6,9 @@ var ca_generation = 0;
 var ca_generation_size = 50;
 
 var material;
-var m_white = new THREE.LineBasicMaterial( { color: 'white' } );
 var m_black = new THREE.LineBasicMaterial( { color: 'black' } );
 var m_green = new THREE.LineBasicMaterial( { color: '#00ff00' } );
+var m_on    = m_green;
 
 
 function ca_init() {
@@ -81,7 +81,7 @@ function ca_draw_generation(g) {
   for (var c = 0; c <= ca_generation_size; c++) {
     
     if (g[c]) {
-      material = m_green;
+      material = m_on;
     } else {
       material = m_black;
     }
@@ -113,13 +113,19 @@ function ca_draw_generation(g) {
 
 function ca_calculate_x(c) {
   
-  return ((100 - (c * 2)) - 50) * -1;
+  var a = ca_generation_size * 2;
+  var b = ca_generation_size;
+  
+  return ((a - (c * 2)) - b) * -1;
   
 }
 
 
 function ca_calculate_y() {
+
+  var a = ca_generation_size * 2;
+  var b = ca_generation_size;
   
-  return (100 - (ca_generation * 2)) - 50;
+  return (a - (ca_generation * 2)) - b;
   
 }
