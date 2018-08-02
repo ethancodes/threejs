@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script src="../js/ca.js"></script>
+    <script>
+      
+      /* 
+        2d ca        
+        */
+      
+      var debugging = true;
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      if (half_window_h < half_window_w) {
+        ca_generation_size = half_window_h - 100;
+      } else {
+        ca_generation_size = half_window_w - 100;
+      }
+      ca_generation_size = parseInt(ca_generation_size / 10);
+      if (debugging) {
+        console.log("GENERATION SIZE: " + ca_generation_size.toString());
+      }
+      
+      var origin = new THREE.Vector3(); // 0 0 0      
+      
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        -1000,
+        1
+      );
+      camera.position.set( 0, 0, 100 );
+      camera.lookAt( origin );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+      
+      var colors = [
+        '#67597A',
+        '#544E61',
+        '#6E8894',
+        '#85BAA1',
+        '#CEEDDB'
+      ];
+      var random_color = colors[getRandomInt(0, colors.length)];
+      if (debugging) {
+        console.log(random_color);
+      }
+      m_on = new THREE.LineBasicMaterial( { color: random_color } );
+
+      var grid0 = ca_init2D();
+      ca_generation = 1; // reset!
+      
+      function gnext(ul, uc, ur, l, c, r, ll, lc, lr) {
+        
+        /* https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules */
+        
+        var total = ul + uc + ur + l + r + ll + lc + lr;
+        
+        if (c) {
+          if (total < 2) return 0;
+          if (total == 2 || total == 3) return 1;
+          if (total > 3) return 0;
+        } else {
+          if (total == 3) return 1;
+          return 0;
+        }
+        return c;
+        
+      }
+
+      /*
+          console.log("GENERATION " + ca_generation.toString());
+          
+          shade_color = shadeColor2(random_color, ca_generation / ca_generation_size);
+          m_on = new THREE.LineBasicMaterial( { color: shade_color } );
+        
+          var grid1 = ca_next_generation2D(grid0, gnext);
+          ca_draw_generation2D(grid1);
+      */
+      
+      function animateThatShitYo() {
+        
+        if (ca_generation < ca_generation_size * 3) {
+                    
+          requestAnimationFrame( animateThatShitYo );
+
+          m_on = new THREE.LineBasicMaterial( { color: random_color } );
+        
+          scene = new THREE.Scene();
+          scene.background = new THREE.Color( 'white' );          
+          
+          var grid1 = ca_next_generation2D(grid0, gnext);
+          ca_draw_generation2D(grid1);
+          grid0 = grid1;        
+          
+        }
+                
+      }
+      animateThatShitYo();      
+      
+      
+    </script>
+  </body>
+</html>

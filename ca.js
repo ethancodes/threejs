@@ -121,11 +121,176 @@ function ca_calculate_x(c) {
 }
 
 
-function ca_calculate_y() {
+function ca_calculate_y(c) {
 
   var a = ca_generation_size * 2;
   var b = ca_generation_size;
+  if (!c) c = ca_generation;
   
-  return (a - (ca_generation * 2)) - b;
+  return (a - (c * 2)) - b;
+  
+}
+
+
+/* functions for 2D */
+
+function ca_init2D() {
+  
+  var grid = [];
+  var g;
+  
+  for (var i = 0; i < ca_generation_size; i++) {
+    g = ca_init();
+    grid.push(g);
+  }
+  
+  return grid;
+  
+}
+
+function ca_draw_generation2D(grid) {
+  
+  var y;
+  
+  for (var i = 0; i < ca_generation_size; i++) {
+    
+    y = ca_calculate_y(i);
+
+    for (var j = 0; j < ca_generation_size; j++) {
+    
+      if (grid[i][j]) {
+        material = m_on;
+      } else {
+        material = m_black;
+      }
+    
+      var x = ca_calculate_x(j);
+    
+      var geometry = new THREE.Geometry();
+      geometry.vertices.push( new THREE.Vector3( x, y, 0 ) );
+      geometry.vertices.push( new THREE.Vector3( x, y-2, 0 ) );
+      geometry.vertices.push( new THREE.Vector3( x+2, y-2, 0 ) );
+      geometry.vertices.push( new THREE.Vector3( x+2, y, 0 ) );
+
+      geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+      geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+      geometry.computeFaceNormals();
+      geometry.computeVertexNormals();
+
+      var shape = new THREE.Mesh( geometry, material );
+      scene.add( shape );
+      
+    }
+    
+  }
+  
+  renderer.render( scene, camera );
+  ca_generation++;  
+  
+}
+
+function ca_next_generation2D(grid, callback) {
+  
+  var nextgrid = [], nextrow = [];
+  
+  var ul, uc, ur, l, r, ll, lc, lr, nc;
+  var debug, lookatx, lookaty;
+  
+  for (var i = 0; i < ca_generation_size; i++) {
+        
+    nextrow = [];
+    
+    for (var j = 0; j < ca_generation_size; j++) {
+      
+      // upper left, and wrap
+      lookatx = i - 1;
+      lookaty = j - 1;
+      if (lookatx < 0) {
+        lookatx = ca_generation_size - 1;
+      }
+      if (lookaty < 0) {
+        lookaty = ca_generation_size - 1;
+      }
+      ul = grid[lookatx][lookaty];
+      
+      // upper center
+      lookatx = i - 1;
+      lookaty = j;
+      if (lookatx < 0) {
+        lookatx = ca_generation_size - 1;
+      }
+      uc = grid[lookatx][lookaty];
+
+      // upper right, and wrap
+      lookatx = i - 1;
+      lookaty = j + 1;
+      if (lookatx < 0) {
+        lookatx = ca_generation_size - 1;
+      }
+      if (lookaty >= ca_generation_size-1) {
+        lookaty = 0;
+      }
+      ur = grid[lookatx][lookaty];
+
+      // left, and wrap
+      lookatx = i;
+      lookaty = j - 1;
+      if (lookaty < 0) {
+        lookaty = ca_generation_size - 1;
+      }
+      l = grid[lookatx][lookaty];
+      
+      // center, which is the current cell
+      c = grid[i][j];
+      
+      // right, and wrap
+      lookatx = i;
+      lookaty = j + 1;
+      if (lookaty >= ca_generation_size-1) {
+        lookaty = 0;
+      }
+      r = grid[lookatx][lookaty];
+
+      // lower left, and wrap
+      lookatx = i + 1;
+      lookaty = j - 1;
+      if (lookatx >= ca_generation_size-1) {
+        lookatx = 0;
+      }
+      if (lookaty < 0) {
+        lookaty = ca_generation_size - 1;
+      }
+      ll = grid[lookatx][lookaty];
+      
+      // lower center
+      lookatx = i + 1;
+      lookaty = j;
+      if (lookatx >= ca_generation_size-1) {
+        lookatx = 0;
+      }
+      lc = grid[lookatx][lookaty];
+
+      // lower right, and wrap
+      lookatx = i + 1;
+      lookaty = j + 1;
+      if (lookatx >= ca_generation_size-1) {
+        lookatx = 0;
+      }
+      if (lookaty >= ca_generation_size-1) {
+        lookaty = 0;
+      }
+      lr = grid[lookatx][lookaty];
+      
+      nc = callback(ul, uc, ur, l, c, r, ll, lc, lr);
+      
+      nextrow.push(nc);
+      
+    }
+    
+    nextgrid.push(nextrow);
+    
+  }
+  
+  return nextgrid;  
   
 }
