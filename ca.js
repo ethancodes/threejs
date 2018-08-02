@@ -125,7 +125,7 @@ function ca_calculate_y(c) {
 
   var a = ca_generation_size * 2;
   var b = ca_generation_size;
-  if (!c) c = ca_generation;
+  c = (typeof c !== 'undefined') ?  c : ca_generation;
   
   return (a - (c * 2)) - b;
   
