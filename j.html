@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        2d ca        
+        */
+      
+      var debugging = true;
+      var ca_generation_size = 100;
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      if (half_window_h < half_window_w) {
+        ca_generation_size = half_window_h - 100;
+      } else {
+        ca_generation_size = half_window_w - 100;
+      }
+      ca_generation_size = parseInt(ca_generation_size / 3);
+      if (debugging) {
+        console.log("GENERATION SIZE: " + ca_generation_size.toString());
+      }
+      
+      var origin = new THREE.Vector3(); // 0 0 0      
+      
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        -1000,
+        1
+      );
+      camera.position.set( 0, 0, 100 );
+      camera.lookAt( origin );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+
+      
+      var colors = [
+        '#67597A',
+        '#544E61',
+        '#6E8894',
+        '#85BAA1',
+        '#CEEDDB'
+      ];
+      var random_color = colors[getRandomInt(0, colors.length)];
+      if (debugging) {
+        console.log(random_color);
+      }
+      var color = new THREE.Color(random_color);
+      
+      
+      //
+      // init population
+      var population = [];
+      for (var i = 0; i < ca_generation_size; i++) {
+        var p = [];
+        for (var j = 0; j < ca_generation_size; j++) {
+          var c = 0;
+          if (Math.random() > 0.5) {
+            c = 1;
+          }
+          p.push(c);
+        }
+        population.push(p);
+      }
+      if (debugging) {
+        console.log(population);
+      }
+      
+      
+      //
+      // draw that!
+      draw_population(population);
+      
+      
+      //
+      // and GO!
+      var ca_generation = 0;
+      var anim = setInterval(animate, 1000);
+      
+      function animate() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 'white' );
+        population = next_population(population);
+        draw_population(population);
+        ca_generation++;
+        if (ca_generation > ca_generation_size) {
+          clearInterval(anim);
+        }
+      }
+      
+
+      
+      function draw_population(population) {
+        
+        if (debugging) {
+          console.log("DRAWING!");
+        }
+
+        var size = ca_generation_size * ca_generation_size;
+        var data = new Uint8Array( 3 * size );
+
+        for ( var i = 0; i < size; i ++ ) {
+
+          // translate i
+          var x = Math.floor( i / ca_generation_size );
+          var y = i % ca_generation_size;
+          var p = population[x][y];
+          
+          var stride = i * 3;
+
+          if (p) {
+            data[ stride ] = color.r * 255;
+            data[ stride + 1 ] = color.g * 255;
+            data[ stride + 2 ] = color.b * 255;
+          } else {
+            data[ stride ] = 255;
+            data[ stride + 1 ] = 255;
+            data[ stride + 2 ] = 255;            
+          }
+
+        }
+
+        // used the buffer to create a DataTexture
+
+        var texture = new THREE.DataTexture(
+          data, 
+          ca_generation_size, 
+          ca_generation_size, 
+          THREE.RGBFormat
+        );
+        texture.needsUpdate = true;
+
+        var material = new THREE.MeshBasicMaterial( {
+          map: texture
+        } );
+        var geometry = new THREE.PlaneGeometry(ca_generation_size, ca_generation_size)
+
+        var shape = new THREE.Mesh( geometry, material );
+        scene.add( shape );
+
+        renderer.render( scene, camera );      
+        
+      }
+      
+      
+      function next_population(population) {
+        
+        var nextpop = [], nextrow = [];
+
+        var ul, uc, ur, l, r, ll, lc, lr, nc;
+        var debug, lookatx, lookaty;
+
+        for (var i = 0; i < ca_generation_size; i++) {
+
+          nextrow = [];
+
+          for (var j = 0; j < ca_generation_size; j++) {
+
+            // upper left, and wrap
+            lookatx = i - 1;
+            lookaty = j - 1;
+            if (lookatx < 0) {
+              lookatx = ca_generation_size - 1;
+            }
+            if (lookaty < 0) {
+              lookaty = ca_generation_size - 1;
+            }
+            ul = population[lookatx][lookaty];
+
+            // upper center
+            lookatx = i - 1;
+            lookaty = j;
+            if (lookatx < 0) {
+              lookatx = ca_generation_size - 1;
+            }
+            uc = population[lookatx][lookaty];
+
+            // upper right, and wrap
+            lookatx = i - 1;
+            lookaty = j + 1;
+            if (lookatx < 0) {
+              lookatx = ca_generation_size - 1;
+            }
+            if (lookaty >= ca_generation_size-1) {
+              lookaty = 0;
+            }
+            ur = population[lookatx][lookaty];
+
+            // left, and wrap
+            lookatx = i;
+            lookaty = j - 1;
+            if (lookaty < 0) {
+              lookaty = ca_generation_size - 1;
+            }
+            l = population[lookatx][lookaty];
+
+            // center, which is the current cell
+            c = population[i][j];
+
+            // right, and wrap
+            lookatx = i;
+            lookaty = j + 1;
+            if (lookaty >= ca_generation_size-1) {
+              lookaty = 0;
+            }
+            r = population[lookatx][lookaty];
+
+            // lower left, and wrap
+            lookatx = i + 1;
+            lookaty = j - 1;
+            if (lookatx >= ca_generation_size-1) {
+              lookatx = 0;
+            }
+            if (lookaty < 0) {
+              lookaty = ca_generation_size - 1;
+            }
+            ll = population[lookatx][lookaty];
+
+            // lower center
+            lookatx = i + 1;
+            lookaty = j;
+            if (lookatx >= ca_generation_size-1) {
+              lookatx = 0;
+            }
+            lc = population[lookatx][lookaty];
+
+            // lower right, and wrap
+            lookatx = i + 1;
+            lookaty = j + 1;
+            if (lookatx >= ca_generation_size-1) {
+              lookatx = 0;
+            }
+            if (lookaty >= ca_generation_size-1) {
+              lookaty = 0;
+            }
+            lr = population[lookatx][lookaty];
+
+            nc = next_cell(ul, uc, ur, l, c, r, ll, lc, lr);
+
+            nextrow.push(nc);
+
+          }
+
+          nextpop.push(nextrow);
+
+        }
+
+        return nextpop;         
+        
+      }
+      
+      
+      function next_cell(ul, uc, ur, l, c, r, ll, lc, lr) {
+        
+        /* https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life#Rules */
+        
+        var total = ul + uc + ur + l + r + ll + lc + lr;
+        
+        if (c) {
+          if (total < 2) return 0;
+          if (total == 2 || total == 3) return 1;
+          if (total > 3) return 0;
+        } else {
+          if (total == 3) return 1;
+          return 0;
+        }
+        return c;
+        
+      }
+      
+      
+    </script>
+  </body>
+</html>
