@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        hexes
+        */
+      
+      var debugging = true;
+            
+      //
+      // FIND OUR ORIGIN
+      var bounds = 100; // pixels from the edge of the window
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      var origin = new THREE.Vector3();
+      if (debugging) {
+        console.log( "WINDOW: " + half_window_w + "x" + half_window_h );
+        console.log( "BOUNDS: " + bounds );
+        console.log( "ORIGIN: " + origin.x.toString() + "x" + origin.y.toString() );
+      }
+      
+      // okay that wasn't so bad
+      
+      // Load the background texture
+      var texture = THREE.ImageUtils.loadTexture( "img/5641_PIA14627.jpg" );
+      var backgroundMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(2, 2 * (half_window_w / half_window_h)),
+        new THREE.MeshBasicMaterial({
+            map: texture
+        }));
+
+      backgroundMesh.material.depthTest = false;
+      backgroundMesh.material.depthWrite = false;
+
+      // Create your background scene
+      var backgroundScene = new THREE.Scene();
+      var backgroundCamera = new THREE.Camera();
+      backgroundScene.add(backgroundCamera );
+      backgroundScene.add(backgroundMesh );      
+      
+      
+      var colors = [
+        '#bfbb96',
+        '#c1ba90',
+        '#ded9b3'
+      ];
+      
+      
+      // foreground
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000
+      );
+      camera.position.set( 0, 0, 750 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.autoClear = false;
+      document.body.appendChild( renderer.domElement );
+      
+      var num_shapes = 20;
+      if (debugging) { console.log( num_shapes + " shapes" ); }
+      
+      var left_side = half_window_w + bounds;
+      var increment = 5;
+      
+      for (var l = 1; l <= num_shapes; l++) {
+        
+        if (debugging) { console.log("@" + l.toString()); }
+        
+        var random_color = colors[Math.floor(Math.random() * colors.length)];
+        if (debugging) { console.log(random_color); }
+        
+        var hex_size = fib(l) * increment;
+        console.log("SIZE " + hex_size.toString());
+        
+        // where is this going?
+        var x = calculatePosition(l);
+        if (debugging) { console.log(x); }
+        var hex_point = new THREE.Vector3( x, 0, 0 );
+        
+        if (Math.random() < 0.667) {
+          var mesh = make_hex( hex_point, hex_size, random_color, l );
+        } else {
+          var mesh = make_hex_line( hex_point, hex_size, random_color, l );
+        }
+        
+        scene.add( mesh );
+        prev_point = x;
+      
+      }
+      
+      function calculatePosition(i) {
+        
+        var hex_size = fib(i) * increment;
+        
+        var x = left_side * -1;
+        if (i <= 1) {
+          return x + (hex_size * 0.866);
+        } else {
+          return calculatePosition(i - 1) + (hex_size * 0.866);
+        }
+        
+      }
+      
+      
+      
+      function animateAllTheThings() {
+       requestAnimationFrame( animateAllTheThings );
+        renderer.clear();
+        renderer.render( backgroundScene, backgroundCamera );
+        renderer.render( scene, camera );
+      }
+      animateAllTheThings();
+      
+      
+      function make_hex(p, r, c, depth) {
+
+        // calculate a transparency based on that
+        var transparency = calculateTransparency(depth) / 2;
+        if (debugging) {
+          console.log("DEPTH (z) " + depth.toString());
+          console.log("TRANSPARENCY " + transparency.toString());
+        }        
+        
+        var hex = new THREE.Shape( hex_points( p, r ) );
+        var geometry = new THREE.ShapeGeometry( hex );
+        
+        var material = new THREE.LineBasicMaterial( { 
+          color: c,
+          transparent: true,
+          opacity: transparency
+        } );
+        
+        var mesh = new THREE.Mesh( geometry, material );
+        mesh.position.z = depth;
+        
+        return mesh;
+        
+      }
+      
+      function make_hex_line( p, r, c, depth ) {
+        
+        var hex = new THREE.Shape( hex_points( p, r, true ) );
+        var geometry = new THREE.ShapeGeometry( hex );
+        
+        var material = new THREE.LineBasicMaterial( { color: '#fffff' });
+                
+        var shape = new THREE.Line( geometry, material );
+        shape.position.z = depth;
+        return shape;
+        
+      }
+      
+      
+      /*
+      totally (more or less) copied this from
+      https://codepen.io/jamaak/pen/KqOzom
+      */      
+      function hex_points( p, r, return_to_origin = false ) {
+        var points = [];
+        points.push( new THREE.Vector3(
+          p.x,
+          p.y + r
+        ) );
+        points.push( new THREE.Vector3(
+          p.x + r * 0.866,
+          p.y + r * 0.5
+        ) );
+        points.push( new THREE.Vector3(
+          p.x + r * 0.866,
+          p.y - r * 0.5
+        ) );
+        points.push( new THREE.Vector3(
+          p.x,
+          p.y - r
+        ) );
+        points.push( new THREE.Vector3(
+          p.x - r * 0.866,
+          p.y - r * 0.5
+        ) );
+        points.push( new THREE.Vector3(
+          p.x - r * 0.866,
+          p.y + r * 0.5
+        ) );
+        if ( return_to_origin ) {
+          points.push( new THREE.Vector3(
+            p.x,
+            p.y + (r-0.01) // I don't know why you can't go to the same point
+          ) );          
+        }
+        console.log(points);
+        return points;
+      }     
+      
+      
+      function getRandomPoint(lower, upper) {
+        
+        var p = getRandomInt( lower, upper );
+        // positive or negative?
+        var whatwhat = Math.random();
+        if (whatwhat > 0.5) {
+          p = p * -1;
+        }
+        return p;
+        
+      }
+      
+      function fib(x) {
+        if (x <= 1) {
+          return 1;
+        } else {
+          return fib(x-1) + fib(x-2);
+        }
+      }
+      
+    </script>
+  </body>
+</html>
