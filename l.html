@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        lines
+        */
+      
+      var debugging = true;
+            
+      //
+      // FIND OUR ORIGIN
+      var bounds = 100; // pixels from the edge of the window
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      var origin = new THREE.Vector3();
+      if (debugging) {
+        console.log( "WINDOW: " + half_window_w + "x" + half_window_h );
+        console.log( "BOUNDS: " + bounds );
+        console.log( "ORIGIN: " + origin.x.toString() + "x" + origin.y.toString() );
+      }
+      
+      // okay that wasn't so bad
+      
+      var scene = new THREE.Scene();
+      //scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000
+      );
+      camera.position.set( 0, 0, 750 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.autoClear = false;
+      document.body.appendChild( renderer.domElement );
+      
+      var num_shapes = getRandomInt( bounds / 10, bounds / 3 );
+      if (debugging) { console.log( num_shapes + " shapes" ); }
+      
+      var colors = [
+        '#B24C01',
+        '#CA6D02',
+        '#EDAA03',
+        '#E08B03',
+        '#9B2D00'
+      ];
+      
+      var num_lines = 100; // pretty damn cool
+      var angle = 2;
+      angle = 15;
+      
+      var outer_rad = window.innerWidth * 0.8;
+      
+      for (var l = 0; l < num_shapes; l++) {
+        
+        if (debugging) { console.log("@" + l.toString()); }
+        
+        var random_color = colors[Math.floor(Math.random() * colors.length)];
+        if (debugging) { console.log(random_color); }        
+
+        angle = getRandomInt(2, 15);
+        var angle_incr = angle * Math.PI/180;  // degrees, converted to radians
+        
+        num_lines = getRandomInt(bounds / 10, bounds * 10);
+        
+        var mesh = spiral_out(num_lines, random_color, angle_incr, outer_rad);
+                        
+        scene.add( mesh );        
+      
+      }      
+      
+      
+      renderer.render( scene, camera );
+      
+      
+      function spiral_out(num_points, c, angle_incr, outer_rad) {
+        
+        var points = [];
+        
+        // https://krazydad.com/tutorials/circles/showexample.php?ex=basic_spiral
+        var ratio, angle, spiral_rad, x, y, i;
+        
+        i = 0;
+        
+        while (i <= num_points) {
+          
+          ratio = i / num_points;
+          angle = i / angle_incr;
+          spiral_rad = ratio * outer_rad;
+          x = Math.cos(angle) * spiral_rad;
+          y = Math.sin(angle) * spiral_rad;
+          points.push( new THREE.Vector3(x, y, 0) );
+          
+          i++;
+          
+        }
+        
+        var depth = getRandomInt(0, bounds);
+        // calculate a transparency based on that
+        var transparency = calculateTransparency(depth) / 2;
+        if (debugging) {
+          console.log("DEPTH (z) " + depth.toString());
+          console.log("TRANSPARENCY " + transparency.toString());
+        }        
+        
+        var spiral = new THREE.Shape( points );
+        var geometry = new THREE.ShapeGeometry( spiral );
+        
+        var material = new THREE.LineBasicMaterial( { 
+          color: c,
+          transparent: true,
+          opacity: transparency
+        });
+                
+        var shape = new THREE.Line( geometry, material );
+        shape.position.z = depth;
+        
+        return shape;
+                
+      }
+      
+      
+      function getRandomPoint(lower, upper) {
+        
+        var p = getRandomInt( lower, upper );
+        // positive or negative?
+        var whatwhat = Math.random();
+        if (whatwhat > 0.5) {
+          p = p * -1;
+        }
+        return p;
+        
+      }
+      
+    </script>
+  </body>
+</html>
