@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        triangles
+        what i want to do is draw three equilateral triangles
+        that touch corners
+        forming another equilateral triangle
+        */
+      
+      var debugging = false;
+      
+      //
+      // COLORS
+      var colors = [
+        '#594F3B',
+        '#776258',
+        '#896279',
+        '#9C7CA5',
+        '#ADB2D3'
+      ];
+      
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        500
+      );
+      camera.position.set( 0, 0, 300 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+
+      
+      // pick a random color
+      var random_color = colors[Math.floor(Math.random() * colors.length)];
+      if (debugging) { console.log(random_color); }
+        
+      if (debugging) {
+        drawX(origin, scene, '#ff0000');
+      }
+      
+      var side = 3;
+                
+      var material = new THREE.LineBasicMaterial( { color: random_color } );        
+        
+        // so
+        // i need three points
+        // equally distant from origin (random_height-ish)
+        // and equally distant from each other (equilateral)
+        // https://en.wikipedia.org/wiki/Equilateral_triangle
+      
+      var foo = 0;
+      for (var l = 0; l <= 10; l++) {
+        side *= 1.975;
+        if (foo >= colors.length) {
+          foo = 0;
+        }
+        random_color = colors[foo];
+        material = new THREE.LineBasicMaterial( { color: random_color } );    
+        
+        if ((l % 2) == 0) {
+          drawTriadDown(side, l, material);
+        } else {
+          drawTriadUp(side, l, material);
+        }
+        
+        foo++;
+      }
+      
+      renderer.render( scene, camera );
+      
+      
+      function drawTriadUp(side, depth, material) {
+        
+        var point_a, point_b, point_c;
+        var shape;        
+        var h = (Math.sqrt(3) / 2) * side;
+        if (debugging) {
+          console.log("H: " + h.toString());
+        }
+        
+        point_a = new THREE.Vector3( 0 - (side / 2), (h/3), 0 );
+        point_b = new THREE.Vector3( side / 2, (h/3), 0 );
+        point_c = new THREE.Vector3( 0, (h + (h/3)), 0 );
+        shape = drawTriangle( point_a, point_b, point_c, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        point_b = new THREE.Vector3( 0, 0 - ((h/3) * 2), 0 );
+        point_c = new THREE.Vector3( 0 - side, 0 - ((h/3) * 2), 0 );
+        shape = drawTriangle( point_a, point_c, point_b, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        point_a = new THREE.Vector3( side / 2, (h/3), 0 );
+        point_b = new THREE.Vector3( 0, 0 - ((h/3) * 2), 0 );
+        point_c = new THREE.Vector3( side, 0 - ((h/3) * 2), 0 );
+        shape = drawTriangle( point_b, point_c, point_a, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        
+      }
+      
+      
+      function drawTriadDown(side, depth, material) {
+        
+        var point_a, point_b, point_c;
+        var shape;        
+        var h = (Math.sqrt(3) / 2) * side;
+        if (debugging) {
+          console.log("H: " + h.toString());
+        }
+        
+        point_a = new THREE.Vector3( 0 - (side / 2), (h/3) * -1, 0 );
+        point_b = new THREE.Vector3( side / 2, (h/3) * -1, 0 );
+        point_c = new THREE.Vector3( 0, (h + (h/3)) * -1, 0 );
+        shape = drawTriangle( point_b, point_a, point_c, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        point_b = new THREE.Vector3( 0, 0 - ((h/3) * 2) * -1, 0 );
+        point_c = new THREE.Vector3( 0 - side, 0 - ((h/3) * 2) * -1, 0 );
+        shape = drawTriangle( point_a, point_b, point_c, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        point_a = new THREE.Vector3( side / 2, (h/3) * -1, 0 );
+        point_b = new THREE.Vector3( 0, 0 - ((h/3) * 2) * -1, 0 );
+        point_c = new THREE.Vector3( side, 0 - ((h/3) * 2) * -1, 0 );
+        shape = drawTriangle( point_c, point_b, point_a, material );
+        shape.position.z = depth;
+        scene.add( shape );
+        
+      }
+
+      
+      function drawTriangle(pa, pb, pc, material) {
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( pa );
+        geometry.vertices.push( pb );
+        geometry.vertices.push( pc );
+        
+        var face = new THREE.Face3( 0, 1, 2 );
+        geometry.faces.push( face );
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+        
+        return new THREE.Mesh( geometry, material );
+      }
+      
+      
+      function drawX(v3, scene, c) {
+        
+        var material = new THREE.LineBasicMaterial( { color: c } );
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        
+      }      
+      
+      
+    </script>
+  </body>
+</html>
