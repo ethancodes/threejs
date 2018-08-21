@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        triangles
+        what i want to do is draw three equilateral triangles
+        that touch corners
+        forming another equilateral triangle
+        */
+      
+      var debugging = false;
+      
+      //
+      // COLORS
+      var colors = [
+        '#E4B7E5',
+        '#B288C0',
+        '#7E5A9B',
+        '#63458A',
+        '#9A48D0'
+      ];
+      
+      var scene = new THREE.Scene();
+      //scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        500
+      );
+      camera.position.set( 0, 0, 300 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.body.appendChild( renderer.domElement );
+
+      
+      // pick a random color
+      var random_color = colors[Math.floor(Math.random() * colors.length)];
+      if (debugging) { console.log(random_color); }
+        
+      if (debugging) {
+        drawX(origin, scene, '#ff0000');
+      }
+      
+      var side = 150;
+      var transparency = 0.25;
+                
+      var material = new THREE.LineBasicMaterial( { 
+        color: random_color,
+        transparent: true,
+        opacity: transparency        
+      } );        
+        
+      var shape;
+      var num_triads = getRandomInt(3, 12);
+      var deg = 120 / num_triads;
+      
+      for (var i = 0; i < num_triads-1; i++) {
+        
+        random_color = colors[Math.floor(Math.random() * colors.length)];
+        if (debugging) { console.log(random_color); }
+        material = new THREE.LineBasicMaterial( { 
+          color: random_color,
+          transparent: true,
+          opacity: transparency        
+        } );
+        
+        shape = drawTriad(side, 0, material);
+        shape.rotation.z = ((deg * Math.PI) / 180) * i;
+        scene.add( shape );
+      }      
+      
+      renderer.render( scene, camera );
+      
+      /*
+                A
+               / \
+              F---B
+             / \ / \
+            E---D---C
+      */
+      function drawTriad(side, depth, material) {
+
+        var h = (Math.sqrt(3) / 2) * side;
+        if (debugging) {
+          console.log("H: " + h.toString());
+        }
+        
+        var points = [];
+        var p;
+        
+        // A C E
+        p = new THREE.Vector3( 0, (h + (h/3)), 0 );
+        points.push( p );
+        p = new THREE.Vector3( side, 0 - ((h/3) * 2), 0 );
+        points.push( p );
+        p = new THREE.Vector3( 0 - side, 0 - ((h/3) * 2), 0 );
+        points.push( p );
+        p = new THREE.Vector3( 0, (h + (h/3)), 0 );
+        points.push( p );
+        
+        // but then remove B D F
+        var hole_points = [];
+        hole_points.push( new THREE.Vector2( side / 2, (h/3) ) );
+        hole_points.push( new THREE.Vector2( 0, 0 - ((h/3) * 2) ) );
+        hole_points.push( new THREE.Vector2( 0 - (side / 2), (h/3) ) );
+        var hole_path = new THREE.Path( hole_points );
+        
+        var triad = new THREE.Shape( points );
+        triad.holes.push( hole_path );
+        var geometry = new THREE.ShapeGeometry( triad );
+        var mesh = new THREE.Mesh( geometry, material );
+        return mesh;        
+        
+      }
+      
+      
+      function drawX(v3, scene, c) {
+        
+        var material = new THREE.LineBasicMaterial( { color: c } );
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        
+      }      
+      
+      
+    </script>
+  </body>
+</html>
