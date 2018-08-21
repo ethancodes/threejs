@@ -70,7 +70,7 @@
       var num_triads = getRandomInt(3, 12);
       var deg = 120 / num_triads;
       
-      for (var i = 0; i < num_triads; i++) {
+      for (var i = 0; i < num_triads-1; i++) {
         
         random_color = colors[Math.floor(Math.random() * colors.length)];
         if (debugging) { console.log(random_color); }
