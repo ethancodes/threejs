@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        triangles along the golden spiral
+        */
+      
+      var debugging = false;
+            
+      //
+      // FIND OUR ORIGIN
+      var bounds = 100; // pixels from the edge of the window
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      var origin = new THREE.Vector3();
+      if (debugging) {
+        console.log( "WINDOW: " + half_window_w + "x" + half_window_h );
+        console.log( "BOUNDS: " + bounds );
+        console.log( "ORIGIN: " + origin.x.toString() + "x" + origin.y.toString() );
+      }
+      
+      // okay that wasn't so bad
+      
+      var scene = new THREE.Scene();
+      //scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000
+      );
+      camera.position.set( 0, 0, 750 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.autoClear = false;
+      document.body.appendChild( renderer.domElement );
+      
+      var colors = [
+        '#CACAAA',
+        '#EEC584',
+        '#C8AB83',
+        '#55868C',
+        '#7F636E'
+      ];
+      
+      var num_segments, random_color, angle, angle_incr, mesh;
+      
+      var outer_rad = window.innerWidth * 0.8;
+      
+      angle = getRandomInt(3, 60);
+      angle_incr = angle * Math.PI/180;  // degrees, converted to radians
+      if (debugging) {
+        console.log("ANGLE: " + angle.toString());
+      }
+      
+      num_segments = getRandomInt(bounds / 5, bounds * 10);
+      if (debugging) {
+        console.log("NUM SEGMENTS: " + num_segments.toString());
+      }
+
+      var transparency;
+      var ratio, angle, spiral_rad, x, y;
+      var last_on_spiral, p_on_spiral, p_toward_origin, p_toward_last;
+      var line_to_origin, line_to_last;
+      var shape, material, mesh;
+      
+      last_on_spiral = origin;
+      
+      for (var l = 0; l < num_segments; l++) {
+        
+        if (debugging) { console.log("@" + l.toString()); }
+        
+        ratio = l / num_segments;
+        angle = l / angle_incr;
+        spiral_rad = ratio * outer_rad;
+        x = Math.cos(angle) * spiral_rad;
+        y = Math.sin(angle) * spiral_rad;
+        p_on_spiral = new THREE.Vector3( x, y );
+        if (debugging) {
+          console.log(p_on_spiral.x.toString() + "x" + p_on_spiral.y.toString());
+        }
+                
+        p_toward_last = new THREE.Vector3();
+        line_to_last = new THREE.Line3( p_on_spiral, last_on_spiral );
+        line_to_last.at( ratio, p_toward_last );
+        if (debugging) {
+          console.log(p_toward_last.x.toString() + "x" + p_toward_last.y.toString());
+        }
+        
+        // okay i want a point halfway between p_on_spiral and p_toward_last
+        // and then make a line between that and origin
+        // and then find a point along that line
+        p_toward_origin = new THREE.Vector3();
+        line_to_last = new THREE.Line3( p_on_spiral, p_toward_last );
+        line_to_last.at( 0.5, p_toward_origin );
+        line_to_origin = new THREE.Line3( origin, p_toward_origin );
+        line_to_origin.at( 1 - ratio, p_toward_origin );
+        if (debugging) {
+          console.log(p_toward_origin.x.toString() + "x" + p_toward_origin.y.toString());
+        }
+        
+        
+        random_color = colors[Math.floor(Math.random() * colors.length)];
+        //if (debugging) { console.log(random_color); }        
+        transparency = calculateTransparency(l);
+        
+        material = new THREE.LineBasicMaterial( { 
+          color: random_color,
+          transparent: true,
+          opacity: transparency
+        });     
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( p_on_spiral );
+        geometry.vertices.push( p_toward_origin );
+        geometry.vertices.push( p_toward_last );
+        
+        geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+        
+        shape = new THREE.Mesh( geometry, material );
+        shape.position.z = l;
+        shape.rotation.z = (angle * Math.PI) / 180;
+        
+        scene.add( shape );
+        
+        
+        last_on_spiral = p_on_spiral;
+        
+              
+      }      
+      
+      
+      renderer.render( scene, camera );
+      
+      
+    </script>
+  </body>
+</html>
