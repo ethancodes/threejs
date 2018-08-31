@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset=utf-8>
+    <title>three.js</title>
+    <style>
+      body { margin: 0; }
+      canvas { width: 100%; height: 100% }
+    </style>
+  </head>
+  <body>
+    <script src="../js/three.js"></script>
+    <script src="../js/helpers.js"></script>
+    <script>
+      
+      /* 
+        horizontal "strips"
+        transparent
+        random lengths
+        layered
+        */
+      
+      var debugging = true;
+            
+      //
+      // FIND OUR ORIGIN
+      var bounds = 100; // pixels from the edge of the window
+      
+      var half_window_w = window.innerWidth / 2;
+      var half_window_h = window.innerHeight / 2;
+      var origin = new THREE.Vector3();
+      if (debugging) {
+        console.log( "WINDOW: " + half_window_w + "x" + half_window_h );
+        console.log( "BOUNDS: " + bounds );
+        console.log( "ORIGIN: " + origin.x.toString() + "x" + origin.y.toString() );
+      }
+      
+      // okay that wasn't so bad
+      
+      var scene = new THREE.Scene();
+      scene.background = new THREE.Color( 'white' );
+      
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        1,
+        1000
+      );
+      camera.position.set( 0, 0, 200 );
+      camera.lookAt( new THREE.Vector3() );
+      
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.autoClear = false;
+      document.body.appendChild( renderer.domElement );
+      
+      var colors = [
+        '#123F54',
+        '#3781A3',
+        '#2E93C1',
+        '#4ECDF4',
+        '#6FC8F2'
+      ];
+      
+      
+      // so let's set up some boundaries
+      var upper = bounds;
+      var lower = bounds * -1;
+      var left  = bounds * -1;
+      var right = bounds;
+      
+      /*
+      if (debugging) {
+        drawX( origin, scene, '#000000' );
+        drawX( new THREE.Vector3( left, upper ), scene, '#000000' );
+        drawX( new THREE.Vector3( right, upper ), scene, '#000000' );
+        drawX( new THREE.Vector3( right, lower ), scene, '#000000' );
+        drawX( new THREE.Vector3( left, lower ), scene, '#000000' );
+      }
+      */
+      
+      var num_strips = getRandomInt( bounds, bounds * 10 );
+            
+      var material, geometry, shape;
+      var pa, pb, pc, pd;
+      
+      for (var s = 0; s < num_strips; s++) {
+        
+        // pick a strip width
+        var w = getRandomInt( 10, 30 );
+        
+        // pick a starting place along the left side
+        var y = getRandomInt( upper - w, lower );
+        
+        // pick a starting place left-to-right
+        var x = getRandomInt( left, right );
+        
+        // pick a strip length
+        var l = getRandomInt( 0, right - x );
+                
+        // pick a random color
+        var c = colors[Math.floor(Math.random() * colors.length)];
+        
+        // pick a transparency
+        var t = getRandomInt( 1, 25 ) / 100;
+        
+        if (debugging) { 
+          var debug = "STRIP @ " + x.toString() + "x" + y.toString() + " ";
+          debug += "has length " + l.toString() + " ";
+          debug += "and width " + w.toString() + " ";
+          debug += "and color " + c + " ";
+          debug += "width opacity " + t.toString() + " ";
+          console.log(debug);
+        }
+        
+        // okay
+        // let's see if we can draw this thing
+        
+        pa = new THREE.Vector3( x, y );
+        pb = new THREE.Vector3( x, y + w );
+        pc = new THREE.Vector3( x + l, y + w );
+        pd = new THREE.Vector3( x + l, y );
+        
+        /*
+        if (debugging) {
+          console.log(pa.x.toString() + "x" + pa.y.toString());
+          console.log(pb.x.toString() + "x" + pb.y.toString());
+          console.log(pc.x.toString() + "x" + pc.y.toString());
+          console.log(pd.x.toString() + "x" + pd.y.toString());
+        }
+        */
+        
+        material = new THREE.LineBasicMaterial( { 
+          color: c,
+          transparent: true,
+          opacity: t
+        });     
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( pc );
+        geometry.vertices.push( pb );
+        geometry.vertices.push( pa );
+        geometry.vertices.push( pd );
+        
+        geometry.faces.push( new THREE.Face3( 0, 1, 2 ) );
+        geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+        geometry.computeFaceNormals();
+        geometry.computeVertexNormals();
+        
+        shape = new THREE.Mesh( geometry, material );
+        scene.add( shape );        
+        
+      }
+      
+      
+      renderer.render( scene, camera );
+
+      
+      function drawX(v3, scene, c) {
+        
+        var material = new THREE.LineBasicMaterial( { color: c } );
+        var geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        geometry = new THREE.Geometry();
+        geometry.vertices.push( new THREE.Vector3( v3.x - 3, v3.y + 3, 0 ) );
+        geometry.vertices.push( new THREE.Vector3( v3.x + 3, v3.y - 3, 0 ) );
+        scene.add( new THREE.Line( geometry, material ) );
+        
+      } 
+      
+    </script>
+  </body>
+</html>
